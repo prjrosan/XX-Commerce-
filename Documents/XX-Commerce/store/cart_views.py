@@ -135,8 +135,24 @@ def remove_from_cart(request, item_id):
 @login_required
 def checkout(request):
     """Checkout page."""
-    # First try to get existing active cart
-    cart = Cart.objects.filter(user=request.user, is_active=True).first()
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Clean up any duplicate active carts first
+    active_carts = Cart.objects.filter(user=request.user, is_active=True)
+    cart_count = active_carts.count()
+    
+    if cart_count > 1:
+        logger.warning(f'User {request.user.username} has {cart_count} active carts, cleaning up...')
+        # Keep the most recent cart and deactivate others
+        latest_cart = active_carts.order_by('-created_at').first()
+        deactivated_count = active_carts.exclude(id=latest_cart.id).update(is_active=False)
+        logger.info(f'Deactivated {deactivated_count} duplicate carts for user {request.user.username}')
+        cart = latest_cart
+    else:
+        # Get the single active cart
+        cart = active_carts.first()
+    
     if not cart:
         messages.warning(request, 'Your cart is empty!')
         return redirect('store:cart')
