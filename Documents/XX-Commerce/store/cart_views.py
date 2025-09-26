@@ -135,7 +135,12 @@ def remove_from_cart(request, item_id):
 @login_required
 def checkout(request):
     """Checkout page."""
-    cart = get_object_or_404(Cart, user=request.user, is_active=True)
+    # First try to get existing active cart
+    cart = Cart.objects.filter(user=request.user, is_active=True).first()
+    if not cart:
+        messages.warning(request, 'Your cart is empty!')
+        return redirect('store:cart')
+    
     cart_items = cart.items.select_related('product').all()
     
     if not cart_items.exists():

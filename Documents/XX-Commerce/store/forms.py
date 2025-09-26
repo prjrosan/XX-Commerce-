@@ -7,11 +7,11 @@ class AddToCartForm(forms.Form):
     """Form for adding products to cart."""
     quantity = forms.IntegerField(
         min_value=1,
-        max_value=100,
+        max_value=1000,  # Increased to allow larger quantities
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
             'min': '1',
-            'max': '100',
+            'max': '1000',  # Updated to match max_value
             'value': '1'
         })
     )
