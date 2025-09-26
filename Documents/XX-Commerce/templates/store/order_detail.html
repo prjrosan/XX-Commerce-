@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order {{ order.order_number }} - XX Commerce{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Order Details</h2>
+                <a href="{% url 'store:order_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Orders
+                </a>
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Order Number:</strong></td>
+                                    <td>{{ order.order_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Order Date:</strong></td>
+                                    <td>{{ order.created_at|date:"F d, Y g:i A" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        <span class="badge bg-{{ order.status|yesno:'success,warning,secondary' }}">
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Total Items:</strong></td>
+                                    <td>{{ order.items.count }} item{{ order.items.count|pluralize }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Subtotal:</strong></td>
+                                    <td>¥{{ order.subtotal|floatformat:0 }}</td>
+                                </tr>
+                                {% if order.discount_amount > 0 %}
+                                <tr>
+                                    <td><strong>Discount:</strong></td>
+                                    <td class="text-success">-¥{{ order.discount_amount|floatformat:0 }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td><strong>Shipping:</strong></td>
+                                    <td>¥{{ order.shipping_cost|floatformat:0 }}</td>
+                                </tr>
+                                <tr class="table-active">
+                                    <td><strong>Total:</strong></td>
+                                    <td class="fw-bold">¥{{ order.total_amount|floatformat:0 }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Items -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Items</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items.all %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if item.product.primary_image %}
+                                                <img src="{{ item.product.primary_image.image.url }}" 
+                                                     alt="{{ item.product.name }}" 
+                                                     class="me-3" 
+                                                     style="width: 60px; height: 60px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="me-3 bg-light d-flex align-items-center justify-content-center" 
+                                                     style="width: 60px; height: 60px;">
+                                                    <i class="fas fa-image text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <a href="{% url 'store:product_detail' item.product.slug %}" class="text-decoration-none">
+                                                        {{ item.product.name }}
+                                                    </a>
+                                                </h6>
+                                                <small class="text-muted">{{ item.product.sku }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>¥{{ item.price|floatformat:0 }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td class="fw-bold">¥{{ item.line_total|floatformat:0 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Shipping Address -->
+            {% if order.shipping_address %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Shipping Address</h5>
+                </div>
+                <div class="card-body">
+                    <address class="mb-0">
+                        <strong>{{ order.shipping_address.first_name }} {{ order.shipping_address.last_name }}</strong><br>
+                        {{ order.shipping_address.street_address }}<br>
+                        {% if order.shipping_address.apartment_address %}
+                            {{ order.shipping_address.apartment_address }}<br>
+                        {% endif %}
+                        {{ order.shipping_address.city }}, {{ order.shipping_address.state }} {{ order.shipping_address.zip_code }}<br>
+                        {{ order.shipping_address.country }}<br>
+                        {% if order.shipping_address.phone_number %}
+                            <i class="fas fa-phone me-1"></i>{{ order.shipping_address.phone_number }}
+                        {% endif %}
+                    </address>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

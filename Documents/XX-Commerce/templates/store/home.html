@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - XX Commerce{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section position-relative overflow-hidden text-white py-5 py-lg-0 d-flex align-items-center">
+    <div class="hero-bg-animation">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+    
+    <div class="container z-1 py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6 text-center text-lg-start mb-5 mb-lg-0">
+                <div class="hero-badge mb-4 animate-fade-slide-up">
+                    <span class="badge bg-gradient-primary px-4 py-2 rounded-pill">
+                        <i class="fas fa-star me-2"></i>Premium Shopping Experience
+                    </span>
+                </div>
+                <h1 class="display-1 fw-bold mb-4 animate-fade-slide-up delay-1">
+                    <span class="text-gradient typing-text">Discover</span> Your Next 
+                    <span class="text-gradient typing-text-2">Favorite Product</span>
+                </h1>
+                <p class="lead mb-5 animate-fade-slide-up delay-2">
+                    Experience the future of online shopping with our curated collection of premium products, 
+                    designed to elevate your lifestyle to extraordinary heights.
+                </p>
+                <div class="d-flex justify-content-center justify-content-lg-start gap-3 animate-fade-slide-up delay-3">
+                    <a href="{% url 'store:product_list' %}" class="btn btn-gradient btn-lg px-5 py-3 shadow-lg hover-lift">
+                        <i class="fas fa-shopping-bag me-2"></i>Explore Collection
+                        <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                    <a href="{% url 'store:category_list' %}" class="btn btn-outline-light btn-lg px-5 py-3 border-2 hover-lift">
+                        <i class="fas fa-th-large me-2"></i>Browse Categories
+                    </a>
+                </div>
+                
+                <!-- Stats -->
+                <div class="row mt-5 animate-fade-slide-up delay-4">
+                    <div class="col-4">
+                        <div class="stat-item text-center">
+                            <h3 class="fw-bold text-gradient counter" data-target="10000">0</h3>
+                            <p class="small mb-0">Happy Customers</p>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-item text-center">
+                            <h3 class="fw-bold text-gradient counter" data-target="500">0</h3>
+                            <p class="small mb-0">Premium Products</p>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-item text-center">
+                            <h3 class="fw-bold text-gradient counter" data-target="99">0</h3>
+                            <p class="small mb-0">Satisfaction Rate</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 d-flex justify-content-center animate-fade-slide-up delay-3">
+                <div class="hero-image-container position-relative">
+                    <div class="hero-image-wrapper">
+                        <img src="{% static 'images/hero-image.jpg' %}" alt="Shopping Experience" class="hero-main-image">
+                        <div class="image-overlay"></div>
+                    </div>
+                    
+                    <!-- Floating Elements -->
+                    <div class="floating-elements">
+                        <div class="floating-card card-1">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Add to Cart</span>
+                        </div>
+                        <div class="floating-card card-2">
+                            <i class="fas fa-heart"></i>
+                            <span>Wishlist</span>
+                        </div>
+                        <div class="floating-card card-3">
+                            <i class="fas fa-star"></i>
+                            <span>5.0 Rating</span>
+                        </div>
+                        <div class="floating-card card-4">
+                            <i class="fas fa-truck"></i>
+                            <span>Free Shipping</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator animate-bounce">
+        <i class="fas fa-chevron-down"></i>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section py-5 position-relative">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="section-title display-4 fw-bold mb-3">
+                    Why Choose <span class="text-gradient">XX Commerce</span>?
+                </h2>
+                <p class="section-subtitle lead">Experience the best in online shopping with cutting-edge technology</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h5>Lightning Fast</h5>
+                    <p>Experience blazing-fast page loads and instant checkout with our optimized platform.</p>
+                    <div class="feature-number">01</div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h5>Bank-Level Security</h5>
+                    <p>Your data and payments are protected with military-grade encryption and security protocols.</p>
+                    <div class="feature-number">02</div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-magic"></i>
+                    </div>
+                    <h5>AI-Powered</h5>
+                    <p>Get personalized recommendations powered by advanced machine learning algorithms.</p>
+                    <div class="feature-number">03</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products Section -->
+<section class="featured-products-section py-5 position-relative">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h2 class="section-title display-4 fw-bold mb-3">
+                    Featured <span class="text-gradient">Products</span>
+                </h2>
+                <p class="section-subtitle lead">Handpicked items that define excellence</p>
+            </div>
+        </div>
+        <div class="row">
+            {% for product in featured_products %}
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="product-card modern-card">
+                    <div class="product-image-container">
+                        {% if product.images.first %}
+                            <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="product-image">
+                        {% else %}
+                            <div class="product-placeholder">
+                                <i class="fas fa-image"></i>
+                            </div>
+                        {% endif %}
+                        {% if product.discount_percentage > 0 %}
+                        <div class="discount-badge pulse-animation">{{ product.discount_percentage }}% OFF</div>
+                        {% endif %}
+                        <div class="product-overlay">
+                            <div class="overlay-buttons">
+                                <a href="{% url 'store:product_detail' product.slug %}" class="btn btn-gradient btn-sm">
+                                    <i class="fas fa-eye me-1"></i>View
+                                </a>
+                                <button class="btn btn-light btn-sm wishlist-btn">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product-content">
+                        <h6 class="product-title">{{ product.name }}</h6>
+                        <p class="product-description">{{ product.short_description|truncatewords:10 }}</p>
+                        <div class="product-price">
+                            <span class="current-price">¥{{ product.price|floatformat:0 }}</span>
+                            {% if product.compare_price %}
+                            <span class="old-price">¥{{ product.compare_price|floatformat:0 }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="product-category">{{ product.category.name }}</div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p class="text-muted">No featured products available at the moment.</p>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4">
+            <a href="{% url 'store:product_list' %}" class="btn btn-gradient btn-lg px-5 py-3 hover-lift">
+                <i class="fas fa-arrow-right me-2"></i>View All Products
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Newsletter Section -->
+<section class="newsletter-section py-5 position-relative">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h3 class="display-5 fw-bold text-white mb-3">Stay in the Loop</h3>
+                <p class="lead text-white-50 mb-4">Get exclusive access to new products, special offers, and insider updates!</p>
+                <form class="newsletter-form">
+                    <div class="input-group input-group-lg">
+                        <input type="email" class="form-control glass-input" placeholder="Enter your email address" required>
+                        <button class="btn btn-gradient btn-lg" type="submit">
+                            <i class="fas fa-paper-plane me-2"></i>Subscribe
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Typing animation
+    function typeWriter(element, text, speed = 100) {
+        let i = 0;
+        element.innerHTML = '';
+        function type() {
+            if (i < text.length) {
+                element.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(type, speed);
+            }
+        }
+        type();
+    }
+
+    // Initialize typing animations
+    const typingElements = document.querySelectorAll('.typing-text, .typing-text-2');
+    typingElements.forEach((element, index) => {
+        setTimeout(() => {
+            typeWriter(element, element.textContent, 100);
+        }, index * 1000);
+    });
+
+    // Counter animation
+    function animateCounters() {
+        const counters = document.querySelectorAll('.counter');
+        counters.forEach(counter => {
+            const target = parseInt(counter.getAttribute('data-target'));
+            const duration = 2000;
+            const increment = target / (duration / 16);
+            let current = 0;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                counter.textContent = Math.floor(current).toLocaleString();
+            }, 16);
+        });
+    }
+
+    // Intersection Observer for animations
+    const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                if (entry.target.classList.contains('counter')) {
+                    animateCounters();
+                }
+            }
+        });
+    }, observerOptions);
+
+    // Observe elements
+    document.querySelectorAll('.animate-fade-slide-up, .counter').forEach(el => {
+        observer.observe(el);
+    });
+
+    // Newsletter form
+    const newsletterForm = document.querySelector('.newsletter-form');
+    if (newsletterForm) {
+        newsletterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = this.querySelector('input[type="email"]').value;
+            if (email) {
+                // Show success message with animation
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                alert.style.top = '20px';
+                alert.style.right = '20px';
+                alert.style.zIndex = '9999';
+                alert.style.transform = 'translateX(100%)';
+                alert.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span>Thank you for subscribing! We'll keep you updated with our latest offers.</span>
+                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                document.body.appendChild(alert);
+                
+                // Animate in
+                setTimeout(() => {
+                    alert.style.transform = 'translateX(0)';
+                    alert.style.transition = 'transform 0.3s ease';
+                }, 100);
+                
+                setTimeout(() => {
+                    alert.style.transform = 'translateX(100%)';
+                    setTimeout(() => alert.remove(), 300);
+                }, 5000);
+                
+                this.reset();
+            }
+        });
+    }
+
+    // Parallax effect for hero section
+    window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        const heroSection = document.querySelector('.hero-section');
+        if (heroSection) {
+            heroSection.style.transform = `translateY(${scrolled * 0.5}px)`;
+        }
+    });
+
+    // Add hover effects to cards
+    document.querySelectorAll('.feature-card, .product-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-10px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+});
+</script>
+{% endblock %}

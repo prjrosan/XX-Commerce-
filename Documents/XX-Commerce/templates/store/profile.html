@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile - XX Commerce{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- User Profile Sidebar -->
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-user-circle fa-5x text-muted"></i>
+                    </div>
+                    <h5 class="card-title">{{ user.get_full_name|default:user.username }}</h5>
+                    <p class="text-muted">{{ user.email }}</p>
+                    <p class="small text-muted">
+                        Member since {{ user.date_joined|date:"F Y" }}
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <a href="{% url 'store:order_list' %}" class="text-decoration-none">
+                                <i class="fas fa-shopping-bag me-2"></i>My Orders
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{% url 'store:wishlist' %}" class="text-decoration-none">
+                                <i class="fas fa-heart me-2"></i>Wishlist
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{% url 'address_list' %}" class="text-decoration-none">
+                                <i class="fas fa-map-marker-alt me-2"></i>Addresses
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'store:cart' %}" class="text-decoration-none">
+                                <i class="fas fa-shopping-cart me-2"></i>Shopping Cart
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Profile Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Profile Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Personal Information</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Username:</strong></td>
+                                    <td>{{ user.username }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td>{{ user.email }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>First Name:</strong></td>
+                                    <td>{{ user.first_name|default:"Not provided" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Last Name:</strong></td>
+                                    <td>{{ user.last_name|default:"Not provided" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Date Joined:</strong></td>
+                                    <td>{{ user.date_joined|date:"F d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Last Login:</strong></td>
+                                    <td>{{ user.last_login|date:"F d, Y g:i A"|default:"Never" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Account Status</h6>
+                            <div class="mb-3">
+                                <span class="badge bg-{{ user.is_active|yesno:'success,danger' }}">
+                                    {{ user.is_active|yesno:'Active,Inactive' }}
+                                </span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="badge bg-{{ user.is_staff|yesno:'warning,secondary' }}">
+                                    {{ user.is_staff|yesno:'Staff,Regular User' }}
+                                </span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="badge bg-{{ user.is_superuser|yesno:'danger,secondary' }}">
+                                    {{ user.is_superuser|yesno:'Superuser,Regular User' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="#" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>Edit Profile
+                        </a>
+                        <a href="#" class="btn btn-outline-secondary">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Orders -->
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Orders</h5>
+                    <a href="{% url 'store:order_list' %}" class="btn btn-sm btn-outline-primary">
+                        View All Orders
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_orders %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Total</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order in recent_orders %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'store:order_detail' order.order_number %}" class="text-decoration-none">
+                                                {{ order.order_number }}
+                                            </a>
+                                        </td>
+                                        <td>{{ order.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ order.status|yesno:'success,warning,secondary' }}">
+                                                {{ order.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>¥{{ order.total_amount|floatformat:0 }}</td>
+                                        <td>
+                                            <a href="{% url 'store:order_detail' order.order_number %}" class="btn btn-sm btn-outline-primary">
+                                                View Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">No orders yet</h6>
+                            <p class="text-muted">Start shopping to see your orders here!</p>
+                            <a href="{% url 'store:product_list' %}" class="btn btn-primary">
+                                <i class="fas fa-shopping-cart me-2"></i>Start Shopping
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

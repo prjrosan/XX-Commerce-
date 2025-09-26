@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shopping Cart - XX Commerce{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'store:home' %}">Home</a></li>
+            <li class="breadcrumb-item active">Shopping Cart</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Shopping Cart</h1>
+            
+            {% if cart_items %}
+                <div class="row">
+                    <!-- Cart Items -->
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-body">
+                                {% for item in cart_items %}
+                                <div class="row align-items-center mb-4 cart-item" data-item-id="{{ item.id }}">
+                                    <div class="col-md-2">
+                                        {% if item.product.images.first %}
+                                            <img src="{{ item.product.images.first.image.url }}" 
+                                                 alt="{{ item.product.name }}" 
+                                                 class="img-fluid rounded" 
+                                                 style="height: 80px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-light d-flex align-items-center justify-content-center rounded" 
+                                                 style="height: 80px;">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h5 class="mb-1">{{ item.product.name }}</h5>
+                                        <p class="text-muted small mb-0">{{ item.product.category.name }}</p>
+                                        <p class="text-muted small mb-0">SKU: {{ item.product.sku }}</p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="input-group">
+                                            <button class="btn btn-outline-secondary btn-sm" 
+                                                    type="button" onclick="updateQuantity({{ item.id }}, {{ item.quantity|add:'-1' }})">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <input type="number" class="form-control form-control-sm text-center" 
+                                                   value="{{ item.quantity }}" min="1" max="100" 
+                                                   id="quantity-{{ item.id }}" 
+                                                   onchange="updateQuantity({{ item.id }}, this.value)">
+                                            <button class="btn btn-outline-secondary btn-sm" 
+                                                    type="button" onclick="updateQuantity({{ item.id }}, {{ item.quantity|add:'1' }})">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <span class="h6 text-primary item-price" id="price-{{ item.id }}">
+                                            ¥{{ item.line_total|floatformat:0 }}
+                                        </span>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button class="btn btn-outline-danger btn-sm" 
+                                                onclick="removeItem({{ item.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% if not forloop.last %}
+                                    <hr>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cart Summary -->
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Order Summary</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Coupon Form -->
+                                <form method="post" action="{% url 'store:apply_coupon' %}" class="mb-3">
+                                    {% csrf_token %}
+                                    <div class="input-group">
+                                        {{ coupon_form.code }}
+                                        <button class="btn btn-outline-primary" type="submit">Apply</button>
+                                    </div>
+                                </form>
+
+                                <!-- Order Totals -->
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Subtotal:</span>
+                                    <span id="subtotal">¥{{ cart.total_price|floatformat:0 }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Shipping:</span>
+                                    <span>Free</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Tax:</span>
+                                    <span>¥0</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <strong>Total:</strong>
+                                    <strong id="total">¥{{ cart.total_price|floatformat:0 }}</strong>
+                                </div>
+
+                                <!-- Checkout Button -->
+                                {% if user.is_authenticated %}
+                                    <a href="{% url 'store:checkout' %}" class="btn btn-primary btn-lg w-100 mb-3">
+                                        Proceed to Checkout
+                                    </a>
+                                {% else %}
+                                    <div class="alert alert-info mb-3">
+                                        <small>Please <a href="{% url 'store:login' %}">login</a> to proceed to checkout.</small>
+                                    </div>
+                                    <a href="{% url 'store:login' %}" class="btn btn-primary btn-lg w-100 mb-3">
+                                        Login to Checkout
+                                    </a>
+                                {% endif %}
+
+                                <!-- Continue Shopping -->
+                                <a href="{% url 'store:product_list' %}" class="btn btn-outline-secondary w-100">
+                                    Continue Shopping
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Empty Cart -->
+                <div class="text-center py-5">
+                    <i class="fas fa-shopping-cart fa-5x text-muted mb-4"></i>
+                    <h3>Your cart is empty</h3>
+                    <p class="text-muted mb-4">Looks like you haven't added any items to your cart yet.</p>
+                    <a href="{% url 'store:product_list' %}" class="btn btn-primary btn-lg">
+                        Start Shopping
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateQuantity(itemId, quantity) {
+    if (quantity < 1) {
+        removeItem(itemId);
+        return;
+    }
+
+    fetch(`/update-cart-item/${itemId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: `quantity=${quantity}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update item price
+            document.getElementById(`price-${itemId}`).textContent = `¥${data.item_total}`;
+            
+            // Update cart totals
+            document.getElementById('subtotal').textContent = `¥${data.cart_total}`;
+            document.getElementById('total').textContent = `¥${data.cart_total}`;
+            
+            // Update cart badge
+            const cartBadge = document.querySelector('.badge');
+            if (cartBadge) {
+                cartBadge.textContent = data.cart_items;
+            }
+            
+            // Show success message
+            showAlert(data.message, 'success');
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('An error occurred while updating the cart.', 'danger');
+    });
+}
+
+function removeItem(itemId) {
+    if (!confirm('Are you sure you want to remove this item from your cart?')) {
+        return;
+    }
+
+    fetch(`/remove-from-cart/${itemId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove item from DOM
+            const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
+            if (itemElement) {
+                itemElement.remove();
+            }
+            
+            // Update cart totals
+            document.getElementById('subtotal').textContent = `¥${data.cart_total}`;
+            document.getElementById('total').textContent = `¥${data.cart_total}`;
+            
+            // Update cart badge
+            const cartBadge = document.querySelector('.badge');
+            if (cartBadge) {
+                cartBadge.textContent = data.cart_items;
+            }
+            
+            // Check if cart is empty
+            const cartItems = document.querySelectorAll('.cart-item');
+            if (cartItems.length === 0) {
+                location.reload();
+            }
+            
+            showAlert(data.message, 'success');
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('An error occurred while removing the item.', 'danger');
+    });
+}
+
+function showAlert(message, type) {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alert.style.top = '20px';
+    alert.style.right = '20px';
+    alert.style.zIndex = '9999';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+    
+    // Auto-remove alert after 3 seconds
+    setTimeout(() => {
+        alert.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

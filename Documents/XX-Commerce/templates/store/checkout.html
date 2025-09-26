@@ -1,0 +1,544 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Checkout - XX Commerce{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="checkout-header mb-4">
+                <h2 class="display-6 fw-bold text-gradient mb-2">Secure Checkout</h2>
+                <p class="text-muted">Complete your order with confidence</p>
+            </div>
+            
+            <!-- Progress Steps -->
+            <div class="checkout-progress mb-5">
+                <div class="progress-steps d-flex justify-content-between">
+                    <div class="step active">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">Address</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Payment</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Review</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Checkout Form -->
+            <form method="post" id="checkoutForm">
+                {% csrf_token %}
+                
+                <!-- Address Section -->
+                <div class="checkout-section mb-5">
+                    <div class="section-header d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold text-dark-purple">
+                            <i class="fas fa-map-marker-alt me-2"></i>Delivery Address
+                        </h4>
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                            <i class="fas fa-plus me-1"></i>Add New Address
+                        </button>
+                    </div>
+                    
+                    <!-- Shipping Address -->
+                    <div class="card modern-card mb-4">
+                        <div class="card-header bg-gradient-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-truck me-2"></i>Shipping Address
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if addresses %}
+                                <div class="row">
+                                    {% for address in addresses %}
+                                        {% if address.address_type == 'shipping' %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="address-card" data-address-id="{{ address.id }}">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="shipping_address" 
+                                                           id="shipping_{{ address.id }}" value="{{ address.id }}"
+                                                           {% if forloop.first %}checked{% endif %}>
+                                                    <label class="form-check-label w-100" for="shipping_{{ address.id }}">
+                                                        <div class="address-content">
+                                                            <h6 class="fw-bold">{{ address.first_name }} {{ address.last_name }}</h6>
+                                                            <p class="mb-1">{{ address.address_line_1 }}</p>
+                                                            {% if address.address_line_2 %}
+                                                            <p class="mb-1">{{ address.address_line_2 }}</p>
+                                                            {% endif %}
+                                                            <p class="mb-1">{{ address.city }}, {{ address.state }} {{ address.postal_code }}</p>
+                                                            <p class="mb-0">{{ address.country }}</p>
+                                                            <small class="text-muted">Phone: {{ address.phone }}</small>
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                
+                                {% if not addresses|length %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No shipping addresses found. Please add one to continue.</p>
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                                        <i class="fas fa-plus me-2"></i>Add Shipping Address
+                                    </button>
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No addresses found. Please add one to continue.</p>
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                                        <i class="fas fa-plus me-2"></i>Add Address
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Billing Address -->
+                    <div class="card modern-card mb-4">
+                        <div class="card-header bg-gradient-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-credit-card me-2"></i>Billing Address
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="use_billing_as_shipping" 
+                                       name="use_billing_as_shipping" checked>
+                                <label class="form-check-label fw-bold" for="use_billing_as_shipping">
+                                    Use shipping address as billing address
+                                </label>
+                            </div>
+                            
+                            <div id="billing-address-section" style="display: none;">
+                                {% if addresses %}
+                                    <div class="row">
+                                        {% for address in addresses %}
+                                            {% if address.address_type == 'billing' %}
+                                            <div class="col-md-6 mb-3">
+                                                <div class="address-card" data-address-id="{{ address.id }}">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="billing_address" 
+                                                               id="billing_{{ address.id }}" value="{{ address.id }}"
+                                                               {% if forloop.first %}checked{% endif %}>
+                                                        <label class="form-check-label w-100" for="billing_{{ address.id }}">
+                                                            <div class="address-content">
+                                                                <h6 class="fw-bold">{{ address.first_name }} {{ address.last_name }}</h6>
+                                                                <p class="mb-1">{{ address.address_line_1 }}</p>
+                                                                {% if address.address_line_2 %}
+                                                                <p class="mb-1">{{ address.address_line_2 }}</p>
+                                                                {% endif %}
+                                                                <p class="mb-1">{{ address.city }}, {{ address.state }} {{ address.postal_code }}</p>
+                                                                <p class="mb-0">{{ address.country }}</p>
+                                                                <small class="text-muted">Phone: {{ address.phone }}</small>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="text-center">
+                                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addBillingAddressModal">
+                                        <i class="fas fa-plus me-2"></i>Add Billing Address
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Method Section -->
+                <div class="checkout-section mb-5">
+                    <div class="section-header mb-4">
+                        <h4 class="fw-bold text-dark-purple">
+                            <i class="fas fa-credit-card me-2"></i>Payment Method
+                        </h4>
+                    </div>
+                    
+                    <div class="card modern-card">
+                        <div class="card-body">
+                            <div class="alert alert-info d-flex align-items-center">
+                                <i class="fas fa-info-circle me-3 fa-2x"></i>
+                                <div>
+                                    <strong>Demo Mode:</strong> This is a demonstration checkout. No real payment will be processed.
+                                </div>
+                            </div>
+                            
+                            <div class="payment-methods">
+                                <div class="payment-option selected mb-3" data-payment-method="credit_card" onclick="selectPaymentMethod('credit_card')">
+                                    <input type="radio" name="payment_method" id="credit_card" value="credit_card" class="d-none" checked>
+                                    <div class="payment-card">
+                                        <i class="fas fa-credit-card fa-2x me-3 text-primary"></i>
+                                        <div>
+                                            <h6 class="mb-1">Credit Card</h6>
+                                            <small class="text-muted">Visa, Mastercard, American Express</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="payment-option mb-3" data-payment-method="paypal" onclick="selectPaymentMethod('paypal')">
+                                    <input type="radio" name="payment_method" id="paypal" value="paypal" class="d-none">
+                                    <div class="payment-card">
+                                        <i class="fab fa-paypal fa-2x me-3 text-primary"></i>
+                                        <div>
+                                            <h6 class="mb-1">PayPal</h6>
+                                            <small class="text-muted">Pay with your PayPal account</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="payment-option" data-payment-method="bank_transfer" onclick="selectPaymentMethod('bank_transfer')">
+                                    <input type="radio" name="payment_method" id="bank_transfer" value="bank_transfer" class="d-none">
+                                    <div class="payment-card">
+                                        <i class="fas fa-university fa-2x me-3 text-primary"></i>
+                                        <div>
+                                            <h6 class="mb-1">Bank Transfer</h6>
+                                            <small class="text-muted">Direct bank transfer</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Order Notes -->
+                <div class="checkout-section mb-5">
+                    <div class="section-header mb-4">
+                        <h4 class="fw-bold text-dark-purple">
+                            <i class="fas fa-sticky-note me-2"></i>Order Notes
+                        </h4>
+                    </div>
+                    
+                    <div class="card modern-card">
+                        <div class="card-body">
+                            <textarea name="notes" class="form-control" rows="3" 
+                                    placeholder="Special instructions for your order (optional)..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="checkout-actions d-flex justify-content-between">
+                    <a href="{% url 'store:cart' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Cart
+                    </a>
+                    <button type="submit" class="btn btn-gradient btn-lg px-5">
+                        <i class="fas fa-lock me-2"></i>Place Order
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Order Summary Sidebar -->
+        <div class="col-lg-4">
+            <div class="checkout-summary">
+                <div class="card modern-card sticky-top">
+                    <div class="card-header bg-gradient-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shopping-bag me-2"></i>Order Summary
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Cart Items -->
+                        <div class="order-items mb-4">
+                            <h6 class="fw-bold mb-3">Items ({{ cart.total_items }})</h6>
+                            {% for item in cart.items.all %}
+                            <div class="order-item d-flex align-items-center mb-3">
+                                {% if item.product.primary_image %}
+                                    <img src="{{ item.product.primary_image.image.url }}" 
+                                         alt="{{ item.product.name }}" 
+                                         class="order-item-image me-3">
+                                {% endif %}
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ item.product.name|truncatechars:25 }}</h6>
+                                    <small class="text-muted">Qty: {{ item.quantity }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="fw-bold">¥{{ item.line_total|floatformat:0 }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- Pricing Breakdown -->
+                        <div class="pricing-breakdown">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Subtotal:</span>
+                                <span>¥{{ cart.total_price|floatformat:0 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Shipping:</span>
+                                <span>¥1,000</span>
+                            </div>
+                            {% if cart.coupon %}
+                            <div class="d-flex justify-content-between mb-2 text-success">
+                                <span>Discount ({{ cart.coupon.code }}):</span>
+                                <span>-¥{{ cart.coupon.calculate_discount|floatformat:0 }}</span>
+                            </div>
+                            {% endif %}
+                            <hr>
+                            <div class="d-flex justify-content-between fw-bold fs-5">
+                                <span>Total:</span>
+                                <span class="text-gradient">¥{{ cart.total_price|add:1000|floatformat:0 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Security Notice -->
+                <div class="card modern-card mt-3">
+                    <div class="card-body text-center">
+                        <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                        <h6 class="fw-bold">Secure Checkout</h6>
+                        <p class="small text-muted mb-0">
+                            Your payment information is encrypted and secure. We never store your credit card details.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Address Modal -->
+<div class="modal fade" id="addAddressModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Address</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'address_create' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="address_type" value="shipping">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control" name="first_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control" name="last_name" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Street Address</label>
+                        <input type="text" class="form-control" name="address_line_1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Apartment/Suite (Optional)</label>
+                        <input type="text" class="form-control" name="address_line_2">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">City</label>
+                            <input type="text" class="form-control" name="city" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">State/Province</label>
+                            <input type="text" class="form-control" name="state" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Postal Code</label>
+                            <input type="text" class="form-control" name="postal_code" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Country</label>
+                            <input type="text" class="form-control" name="country" value="Japan" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" name="phone" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Address</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Billing Address Modal -->
+<div class="modal fade" id="addBillingAddressModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Billing Address</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'address_create' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="address_type" value="billing">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control" name="first_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control" name="last_name" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Street Address</label>
+                        <input type="text" class="form-control" name="address_line_1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Apartment/Suite (Optional)</label>
+                        <input type="text" class="form-control" name="address_line_2">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">City</label>
+                            <input type="text" class="form-control" name="city" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">State/Province</label>
+                            <input type="text" class="form-control" name="state" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Postal Code</label>
+                            <input type="text" class="form-control" name="postal_code" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Country</label>
+                            <input type="text" class="form-control" name="country" value="Japan" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" name="phone" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Address</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Payment method selection function
+function selectPaymentMethod(method) {
+    console.log('Selecting payment method:', method);
+    
+    // Remove selected class from all options
+    document.querySelectorAll('.payment-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked option
+    const selectedOption = document.querySelector(`[data-payment-method="${method}"]`);
+    if (selectedOption) {
+        selectedOption.classList.add('selected');
+    }
+    
+    // Check the corresponding radio button
+    const radio = document.getElementById(method);
+    if (radio) {
+        radio.checked = true;
+        console.log('Radio button checked:', method);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Checkout page JavaScript loaded');
+    
+    // Toggle billing address section
+    const useBillingAsShipping = document.getElementById('use_billing_as_shipping');
+    const billingAddressSection = document.getElementById('billing-address-section');
+    
+    useBillingAsShipping.addEventListener('change', function() {
+        if (this.checked) {
+            billingAddressSection.style.display = 'none';
+        } else {
+            billingAddressSection.style.display = 'block';
+        }
+    });
+    
+    // Address card selection
+    document.querySelectorAll('.address-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+                // Remove active class from all cards
+                document.querySelectorAll('.address-card').forEach(c => c.classList.remove('selected'));
+                // Add active class to clicked card
+                this.classList.add('selected');
+            }
+        });
+    });
+    
+    // Payment method selection
+    const paymentOptions = document.querySelectorAll('.payment-option');
+    console.log('Found payment options:', paymentOptions.length);
+    paymentOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Payment option clicked:', this);
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+                console.log('Radio checked:', radio.value);
+                // Remove active class from all options
+                document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+                // Add active class to clicked option
+                this.classList.add('selected');
+                console.log('Selected class added to:', this);
+            }
+        });
+    });
+    
+    // Form validation
+    const checkoutForm = document.getElementById('checkoutForm');
+    checkoutForm.addEventListener('submit', function(e) {
+        const shippingAddress = document.querySelector('input[name="shipping_address"]:checked');
+        const useBillingAsShipping = document.getElementById('use_billing_as_shipping');
+        const billingAddress = document.querySelector('input[name="billing_address"]:checked');
+        
+        if (!shippingAddress) {
+            e.preventDefault();
+            alert('Please select a shipping address.');
+            return;
+        }
+        
+        if (!useBillingAsShipping.checked && !billingAddress) {
+            e.preventDefault();
+            alert('Please select a billing address or use shipping address as billing address.');
+            return;
+        }
+    });
+});
+</script>
+{% endblock %}
