@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Categories - XX Commerce{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-5">
+                <h1 class="display-4 fw-bold text-white mb-3">
+                    <i class="fas fa-th-large me-3"></i>Product Categories
+                </h1>
+                <p class="lead text-light">Browse our wide range of product categories</p>
+            </div>
+        </div>
+    </div>
+
+    {% if categories %}
+        <div class="row g-4">
+            {% for category in categories %}
+                <div class="col-lg-4 col-md-6">
+                    <div class="category-card h-100">
+                        <div class="card border-0 shadow-lg h-100">
+                            <div class="card-body text-center p-4">
+                                <div class="category-icon mb-3">
+                                    {% if category.name == "Electronics" %}
+                                        <i class="fas fa-laptop fa-3x text-primary"></i>
+                                    {% elif category.name == "Clothing" %}
+                                        <i class="fas fa-tshirt fa-3x text-success"></i>
+                                    {% elif category.name == "Books" %}
+                                        <i class="fas fa-book fa-3x text-warning"></i>
+                                    {% elif category.name == "Home & Garden" %}
+                                        <i class="fas fa-home fa-3x text-info"></i>
+                                    {% elif category.name == "Sports" %}
+                                        <i class="fas fa-dumbbell fa-3x text-danger"></i>
+                                    {% elif category.name == "Beauty" %}
+                                        <i class="fas fa-palette fa-3x text-purple"></i>
+                                    {% else %}
+                                        <i class="fas fa-tag fa-3x text-secondary"></i>
+                                    {% endif %}
+                                </div>
+                                
+                                <h3 class="card-title h4 mb-3">
+                                    <a href="{% url 'store:category_detail' category_slug=category.slug %}" 
+                                       class="text-decoration-none text-dark">
+                                        {{ category.name }}
+                                    </a>
+                                </h3>
+                                
+                                {% if category.description %}
+                                    <p class="card-text text-muted mb-4">
+                                        {{ category.description|truncatewords:20 }}
+                                    </p>
+                                {% endif %}
+                                
+                                <div class="category-stats mb-3">
+                                    <span class="badge bg-primary me-2">
+                                        <i class="fas fa-box me-1"></i>
+                                        {{ category.products.count }} Products
+                                    </span>
+                                    {% if category.children.exists %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-folder me-1"></i>
+                                            {{ category.children.count }} Subcategories
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <a href="{% url 'store:category_detail' category_slug=category.slug %}" 
+                                   class="btn btn-primary btn-lg">
+                                    <i class="fas fa-arrow-right me-2"></i>View Products
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% if categories|length > 6 %}
+            <div class="row mt-5">
+                <div class="col-12 text-center">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Showing {{ categories|length }} categories. Use the search bar to find specific products.
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        <i class="fas fa-th-large fa-5x text-muted mb-4"></i>
+                        <h3 class="text-muted mb-3">No Categories Available</h3>
+                        <p class="text-muted mb-4">We're working on adding more categories. Check back soon!</p>
+                        <a href="{% url 'store:product_list' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-shopping-bag me-2"></i>Browse All Products
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.category-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+}
+
+.category-card .card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.category-card .card:hover {
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+}
+
+.category-icon {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.category-stats .badge {
+    font-size: 0.9em;
+    padding: 0.5em 0.8em;
+    border-radius: 20px;
+}
+
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+.empty-state {
+    padding: 3rem 1rem;
+}
+
+@media (max-width: 768px) {
+    .category-card .card-body {
+        padding: 2rem 1.5rem;
+    }
+    
+    .category-icon i {
+        font-size: 2rem !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add smooth scrolling for category cards
+    const categoryCards = document.querySelectorAll('.category-card');
+    
+    categoryCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-8px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+    
+    // Add loading animation for category links
+    const categoryLinks = document.querySelectorAll('.category-card a[href*="category_detail"]');
+    categoryLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            const button = this.querySelector('.btn');
+            if (button) {
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+                button.disabled = true;
+                
+                // Re-enable after 2 seconds (in case of slow loading)
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }, 2000);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
