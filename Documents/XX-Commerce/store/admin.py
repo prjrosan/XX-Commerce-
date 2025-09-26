@@ -27,8 +27,8 @@ class ProductImageInline(admin.TabularInline):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = [
-        'name', 'sku', 'category', 'price_yen', 'stock_quantity', 
-        'is_active', 'is_featured', 'created_at'
+        'name', 'sku', 'category', 'price', 'compare_price', 'price_yen', 'compare_price_yen', 
+        'stock_quantity', 'is_active', 'is_featured', 'created_at'
     ]
     list_filter = [
         'is_active', 'is_featured', 'category', 'track_inventory', 
@@ -36,14 +36,42 @@ class ProductAdmin(admin.ModelAdmin):
     ]
     search_fields = ['name', 'sku', 'description', 'meta_title']
     prepopulated_fields = {'slug': ('name',)}
-    list_editable = ['stock_quantity', 'is_active', 'is_featured']
+    list_editable = ['price', 'compare_price', 'stock_quantity', 'is_active', 'is_featured']
     inlines = [ProductImageInline]
     ordering = ['-created_at']
+    actions = ['make_active', 'make_inactive', 'make_featured', 'make_unfeatured']
     
     def price_yen(self, obj):
         return f"¥{obj.price:,.0f}"
     price_yen.short_description = 'Price (JPY)'
     price_yen.admin_order_field = 'price'
+    
+    def compare_price_yen(self, obj):
+        if obj.compare_price:
+            return f"¥{obj.compare_price:,.0f}"
+        return "-"
+    compare_price_yen.short_description = 'Compare Price (JPY)'
+    compare_price_yen.admin_order_field = 'compare_price'
+    
+    def make_active(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f'{updated} products were successfully marked as active.')
+    make_active.short_description = "Mark selected products as active"
+    
+    def make_inactive(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f'{updated} products were successfully marked as inactive.')
+    make_inactive.short_description = "Mark selected products as inactive"
+    
+    def make_featured(self, request, queryset):
+        updated = queryset.update(is_featured=True)
+        self.message_user(request, f'{updated} products were successfully marked as featured.')
+    make_featured.short_description = "Mark selected products as featured"
+    
+    def make_unfeatured(self, request, queryset):
+        updated = queryset.update(is_featured=False)
+        self.message_user(request, f'{updated} products were successfully marked as unfeatured.')
+    make_unfeatured.short_description = "Mark selected products as unfeatured"
     
     fieldsets = (
         ('Basic Information', {
@@ -231,3 +259,13 @@ class WishlistAdmin(admin.ModelAdmin):
 admin.site.site_header = "XX Commerce Administration"
 admin.site.site_title = "XX Commerce Admin"
 admin.site.index_title = "Welcome to XX Commerce Administration"
+
+# Add custom admin views for better product management
+from django.urls import path
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+import json
