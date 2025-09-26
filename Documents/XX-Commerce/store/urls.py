@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from . import cart_views
 from . import wishlist_views
+from . import admin_views
 
 app_name = 'store'
 
@@ -29,4 +30,5 @@ urlpatterns = [
     path('wishlist/', wishlist_views.wishlist, name='wishlist'),
     path('add-to-wishlist/<int:product_id>/', wishlist_views.add_to_wishlist, name='add_to_wishlist'),
     path('remove-from-wishlist/<int:product_id>/', wishlist_views.remove_from_wishlist, name='remove_from_wishlist'),
+    
 ]

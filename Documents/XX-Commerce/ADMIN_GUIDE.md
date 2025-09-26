@@ -1,107 +1,187 @@
 # XX Commerce Admin Guide
 
-## How to Access the Admin Panel
+## Overview
+This guide covers all the administrative features available in the XX Commerce e-commerce platform. The admin interface provides comprehensive tools for managing products, orders, customers, and analytics.
 
-1. **Start the server:**
-   ```bash
-   python3 manage.py runserver 8000
-   ```
+## Accessing the Admin Panel
 
-2. **Access the admin panel:**
-   - Go to: `http://127.0.0.1:8000/admin/`
-   - Login with one of these accounts:
-     - Username: `admin` | Email: `admin@xxcommerce.com`
-     - Username: `praja` | Email: `praja@xxcommerce.com`
+1. Navigate to `/admin/` in your browser
+2. Login with your superuser credentials
+3. You'll be redirected to the Sales Dashboard by default
 
-## Product Management Features
+## Main Admin Features
 
-### 1. **Edit Product Prices (Quick Edit)**
-- Go to **Products** section
-- You can edit prices directly in the list view:
-  - **Price**: Main product price
-  - **Compare Price**: Original price (for showing discounts)
-  - **Stock Quantity**: Available inventory
-  - **Active**: Show/hide product
-  - **Featured**: Mark as featured product
+### 1. Sales Dashboard (`/admin/sales-dashboard/`)
+The main dashboard provides an overview of your e-commerce performance:
 
-### 2. **Add New Products**
-- Click **"Add Product"** button
-- Fill in the required fields:
-  - **Name**: Product name
-  - **Category**: Select from existing categories
-  - **Price**: Product price in JPY
-  - **Compare Price**: Original price (optional)
-  - **Stock Quantity**: Available inventory
-  - **Description**: Product details
-  - **Images**: Upload product images
+- **Key Metrics**: Total revenue, orders, recent sales
+- **Top Selling Products**: Best performing products with sales data
+- **Order Status Distribution**: Visual breakdown of order statuses
+- **Low Stock Alerts**: Products that need restocking
+- **Recent Orders**: Latest customer orders
+- **Quick Actions**: Direct links to common tasks
 
-### 3. **Bulk Actions**
-- Select multiple products using checkboxes
-- Choose from dropdown actions:
-  - **Mark selected products as active**
-  - **Mark selected products as inactive**
-  - **Mark selected products as featured**
-  - **Mark selected products as unfeatured**
+### 2. Product Management
 
-### 4. **Product Images**
-- Add multiple images per product
-- Set primary image
-- Reorder images by sort order
-- Add alt text for accessibility
+#### Product List (`/admin/store/product/`)
+- View all products with advanced filtering
+- Bulk actions: activate, deactivate, restock, export, duplicate
+- Search by name, SKU, description
+- Filter by category, status, inventory tracking
 
-### 5. **Category Management**
-- Create new categories
-- Set parent categories for subcategories
-- Enable/disable categories
-- Auto-generate SEO-friendly URLs
+#### Product Actions
+- **Bulk Price Update**: Update prices for multiple products
+- **Export Products**: Download product data as CSV
+- **Duplicate Products**: Create copies of existing products
+- **Restock Products**: Bulk restock to default quantity
 
-## Key Features
+#### Product Analytics (`/admin/products/analytics/`)
+- Product performance metrics
+- Best selling products with revenue data
+- Category performance analysis
+- Product status distribution
 
-### ✅ **Price Management**
-- Edit prices directly from product list
-- Set both regular and compare prices
-- Bulk price updates (coming soon)
+### 3. Order Management
 
-### ✅ **Inventory Control**
-- Track stock quantities
-- Enable/disable inventory tracking
-- Allow backorders for out-of-stock items
+#### Order List (`/admin/store/order/`)
+- View all orders with filtering options
+- Bulk status updates: processing, shipped, delivered, cancelled
+- Export orders to CSV
+- Send tracking emails for shipped orders
 
-### ✅ **Product Status**
-- Activate/deactivate products
-- Mark products as featured
-- Control product visibility
+#### Order Analytics (`/admin/orders/analytics/`)
+- Order statistics and trends
+- Revenue metrics and average order value
+- Daily order and revenue charts
+- Order status distribution
 
-### ✅ **SEO Optimization**
-- Auto-generate URLs from product names
-- Set meta titles and descriptions
-- Optimize for search engines
+### 4. Customer Management
 
-## Quick Start Checklist
+#### Customer Analytics (`/admin/customers/`)
+- Customer statistics and trends
+- Top customers by order count and spending
+- Registration trends over time
+- Active customer tracking
 
-1. ✅ **Login to admin panel**
-2. ✅ **Go to Products section**
-3. ✅ **Edit existing product prices** (click on price field)
-4. ✅ **Add new products** (click "Add Product")
-5. ✅ **Upload product images**
-6. ✅ **Set product status** (active/featured)
-7. ✅ **Manage categories**
+#### User Management (`/admin/auth/user/`)
+- Manage user accounts
+- View customer details and order history
+- Activate/deactivate accounts
 
-## Tips for Success
+### 5. Inventory Management
 
-- **Always set compare prices** to show discounts
-- **Upload high-quality images** for better presentation
-- **Use descriptive product names** for SEO
-- **Set appropriate stock quantities** to avoid overselling
-- **Mark popular products as featured** to highlight them
+#### Inventory Dashboard (`/admin/inventory/`)
+- Complete inventory overview
+- Out of stock products
+- Low stock alerts
+- High stock products
+- Inventory tracking controls
+
+### 6. Bulk Operations (`/admin/bulk-operations/`)
+Comprehensive bulk management tools:
+
+- **Product Selection**: Select multiple products for bulk actions
+- **Stock Management**: Bulk restock products
+- **Status Management**: Activate, deactivate, or feature products
+- **Quick Stats**: Overview of product status
+
+### 7. Data Export (`/admin/export/`)
+Export data in CSV format:
+
+- **Products**: Complete product catalog
+- **Orders**: Order history and details
+- **Customers**: Customer information and spending
+
+## Admin Interface Features
+
+### Navigation
+The admin interface includes a comprehensive navigation sidebar with:
+- Dashboard overview
+- Product management
+- Order management
+- Customer analytics
+- Inventory management
+- Tools and utilities
+- Marketing features
+
+### Bulk Actions
+Most admin sections support bulk actions:
+1. Select multiple items using checkboxes
+2. Choose an action from the dropdown
+3. Confirm the action
+4. View results
+
+### Advanced Filtering
+- Filter by date ranges
+- Filter by status (active, inactive, featured)
+- Filter by category
+- Filter by stock levels
+- Search by text fields
+
+### Quick Actions
+Common tasks are accessible via quick action buttons:
+- Add new product
+- Add new category
+- View low stock items
+- Export data
+- Access analytics
+
+## Best Practices
+
+### Product Management
+1. **Regular Inventory Checks**: Use the inventory dashboard to monitor stock levels
+2. **Bulk Updates**: Use bulk actions for efficiency when managing multiple products
+3. **Product Analytics**: Regularly review product performance to optimize your catalog
+4. **Image Management**: Ensure all products have high-quality images
+
+### Order Management
+1. **Status Updates**: Keep order statuses current for customer communication
+2. **Tracking Numbers**: Add tracking numbers for shipped orders
+3. **Order Analytics**: Monitor order trends to identify patterns
+4. **Customer Communication**: Use tracking email features for shipped orders
+
+### Customer Management
+1. **Customer Analytics**: Review customer behavior and spending patterns
+2. **Active Customers**: Monitor customer engagement
+3. **Registration Trends**: Track growth in customer base
+
+### Data Management
+1. **Regular Exports**: Export data regularly for backup and analysis
+2. **Bulk Operations**: Use bulk operations for efficiency
+3. **Analytics Review**: Regularly review analytics for business insights
+
+## Security Features
+
+### Access Control
+- Admin access requires superuser privileges
+- All admin views are protected with `@staff_member_required`
+- Sensitive operations require confirmation
+
+### Data Protection
+- CSRF protection on all forms
+- Input validation on all data entry
+- Secure file uploads for product images
+
+## Troubleshooting
+
+### Common Issues
+1. **Permission Denied**: Ensure you're logged in as a superuser
+2. **Missing Data**: Check if data exists in the database
+3. **Export Issues**: Ensure you have write permissions for downloads
+4. **Bulk Action Failures**: Check if selected items are valid
+
+### Performance Tips
+1. **Large Datasets**: Use filtering to reduce data load
+2. **Bulk Operations**: Process items in smaller batches for large datasets
+3. **Regular Cleanup**: Archive old data to maintain performance
 
 ## Support
 
-If you need help with the admin panel, check:
-- Product documentation in the admin interface
-- Django admin documentation
-- Contact the development team
+For technical support or questions about the admin interface:
+1. Check this guide first
+2. Review the Django admin documentation
+3. Contact the development team
 
 ---
 
-**Happy managing your e-commerce store!** 🛍️
+*This admin interface is designed to provide comprehensive e-commerce management capabilities while maintaining ease of use and efficiency.*

@@ -73,6 +73,8 @@ class Product(TimeStampedModel):
     meta_description = models.TextField(blank=True)
 
     class Meta:
+        verbose_name = "Product"
+        verbose_name_plural = "Products"
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['name']),
@@ -90,6 +92,22 @@ class Product(TimeStampedModel):
     def get_absolute_url(self):
         from django.urls import reverse
         return reverse('store:product_detail', kwargs={'slug': self.slug})
+    
+    def save(self, *args, **kwargs):
+        from django.utils.text import slugify
+        
+        # Auto-generate slug if empty
+        if not self.slug:
+            self.slug = slugify(self.name)
+            
+            # Ensure slug is unique
+            counter = 1
+            original_slug = self.slug
+            while Product.objects.filter(slug=self.slug).exclude(id=self.id).exists():
+                self.slug = f"{original_slug}-{counter}"
+                counter += 1
+        
+        super().save(*args, **kwargs)
 
     @property
     def is_in_stock(self):
@@ -228,20 +246,33 @@ class Cart(TimeStampedModel):
 
     @staticmethod
     def get_or_create_cart(user=None, session_key=None):
-        """Get existing cart or create new one."""
+        """Get existing cart or create new one. Handles duplicate carts by keeping the most recent one."""
         if user and user.is_authenticated:
-            cart, created = Cart.objects.get_or_create(
-                user=user, 
-                is_active=True,
-                defaults={'session_key': ''}
-            )
+            # First check if there are multiple active carts for this user
+            active_carts = Cart.objects.filter(user=user, is_active=True)
+            if active_carts.count() > 1:
+                # Keep the most recent cart and deactivate others
+                cart = active_carts.order_by('-created_at').first()
+                active_carts.exclude(id=cart.id).update(is_active=False)
+                return cart
+            elif active_carts.count() == 1:
+                return active_carts.first()
+            else:
+                # No active cart, create a new one
+                return Cart.objects.create(user=user, is_active=True, session_key='')
         else:
-            cart, created = Cart.objects.get_or_create(
-                session_key=session_key,
-                is_active=True,
-                defaults={'user': None}
-            )
-        return cart
+            # First check if there are multiple active carts for this session
+            active_carts = Cart.objects.filter(session_key=session_key, is_active=True)
+            if active_carts.count() > 1:
+                # Keep the most recent cart and deactivate others
+                cart = active_carts.order_by('-created_at').first()
+                active_carts.exclude(id=cart.id).update(is_active=False)
+                return cart
+            elif active_carts.count() == 1:
+                return active_carts.first()
+            else:
+                # No active cart, create a new one
+                return Cart.objects.create(session_key=session_key, is_active=True, user=None)
 
 
 class CartItem(TimeStampedModel):

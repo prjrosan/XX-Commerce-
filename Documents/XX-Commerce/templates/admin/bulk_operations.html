@@ -1,0 +1,393 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Bulk Operations" %}{% endblock %}
+
+{% block content %}
+<div class="bulk-operations">
+    <h1><i class="fas fa-tasks me-3"></i>{% trans "Bulk Operations" %}</h1>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Bulk Actions -->
+    <div class="bulk-actions-section">
+        <h2><i class="fas fa-cogs me-2"></i>{% trans "Bulk Actions" %}</h2>
+        
+        <form method="post" class="bulk-form">
+            {% csrf_token %}
+            
+            <!-- Product Selection -->
+            <div class="form-section">
+                <h3>{% trans "Select Products" %}</h3>
+                <div class="product-selection">
+                    <div class="selection-controls">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll()">
+                            {% trans "Select All" %}
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectNone()">
+                            {% trans "Select None" %}
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="selectActive()">
+                            {% trans "Select Active Only" %}
+                        </button>
+                    </div>
+                    
+                    <div class="product-list">
+                        {% for product in products %}
+                        <div class="product-item">
+                            <input type="checkbox" name="product_ids" value="{{ product.id }}" id="product_{{ product.id }}" class="product-checkbox">
+                            <label for="product_{{ product.id }}" class="product-label">
+                                <div class="product-info">
+                                    <strong>{{ product.name }}</strong>
+                                    <small class="text-muted">{{ product.sku }} - Stock: {{ product.stock_quantity }}</small>
+                                </div>
+                                <div class="product-status">
+                                    {% if product.is_active %}
+                                        <span class="badge bg-success">{% trans "Active" %}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{% trans "Inactive" %}</span>
+                                    {% endif %}
+                                    {% if product.is_featured %}
+                                        <span class="badge bg-warning">{% trans "Featured" %}</span>
+                                    {% endif %}
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Selection -->
+            <div class="form-section">
+                <h3>{% trans "Choose Action" %}</h3>
+                <div class="action-options">
+                    <div class="action-group">
+                        <h4>{% trans "Stock Management" %}</h4>
+                        <div class="action-item">
+                            <input type="radio" name="action" value="bulk_restock" id="action_restock">
+                            <label for="action_restock">
+                                <i class="fas fa-boxes me-2"></i>
+                                {% trans "Restock Products" %}
+                            </label>
+                            <div class="action-details">
+                                <label for="restock_quantity">{% trans "Restock to:" %}</label>
+                                <input type="number" name="restock_quantity" id="restock_quantity" value="100" min="0" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-group">
+                        <h4>{% trans "Status Management" %}</h4>
+                        <div class="action-item">
+                            <input type="radio" name="action" value="bulk_activate" id="action_activate">
+                            <label for="action_activate">
+                                <i class="fas fa-check-circle me-2"></i>
+                                {% trans "Activate Products" %}
+                            </label>
+                        </div>
+                        <div class="action-item">
+                            <input type="radio" name="action" value="bulk_deactivate" id="action_deactivate">
+                            <label for="action_deactivate">
+                                <i class="fas fa-times-circle me-2"></i>
+                                {% trans "Deactivate Products" %}
+                            </label>
+                        </div>
+                        <div class="action-item">
+                            <input type="radio" name="action" value="bulk_feature" id="action_feature">
+                            <label for="action_feature">
+                                <i class="fas fa-star me-2"></i>
+                                {% trans "Mark as Featured" %}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-play me-2"></i>
+                    {% trans "Execute Bulk Action" %}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stats-section">
+        <h2><i class="fas fa-chart-bar me-2"></i>{% trans "Quick Stats" %}</h2>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-number">{{ products|length }}</span>
+                <span class="stat-label">{% trans "Total Products" %}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">{{ products|length|add:"-1"|add:"1" }}</span>
+                <span class="stat-label">{% trans "Active Products" %}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">0</span>
+                <span class="stat-label">{% trans "Low Stock" %}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bulk-operations {
+    padding: 20px;
+}
+
+.bulk-actions-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 25px;
+    margin-bottom: 20px;
+}
+
+.form-section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+}
+
+.form-section h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.product-selection {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.selection-controls {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.product-list {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.product-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.product-item:last-child {
+    border-bottom: none;
+}
+
+.product-checkbox {
+    margin-right: 10px;
+}
+
+.product-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.product-label:hover {
+    background-color: #f8f9fa;
+}
+
+.product-info {
+    flex: 1;
+}
+
+.product-status {
+    display: flex;
+    gap: 5px;
+}
+
+.action-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.action-group {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.action-group h4 {
+    color: #495057;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.action-item {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.action-item:hover {
+    background-color: #f8f9fa;
+}
+
+.action-item input[type="radio"] {
+    margin-right: 10px;
+}
+
+.action-item label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin: 0;
+    font-weight: 500;
+}
+
+.action-details {
+    margin-top: 10px;
+    margin-left: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.action-details label {
+    margin: 0;
+    font-weight: normal;
+}
+
+.form-actions {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid #dee2e6;
+}
+
+.stats-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 25px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stat-number {
+    display: block;
+    font-size: 24px;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.stat-label {
+    display: block;
+    font-size: 14px;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.alert {
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .action-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+
+<script>
+function selectAll() {
+    document.querySelectorAll('.product-checkbox').forEach(checkbox => {
+        checkbox.checked = true;
+    });
+}
+
+function selectNone() {
+    document.querySelectorAll('.product-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+}
+
+function selectActive() {
+    document.querySelectorAll('.product-checkbox').forEach(checkbox => {
+        const productItem = checkbox.closest('.product-item');
+        const isActive = productItem.querySelector('.badge.bg-success');
+        checkbox.checked = !!isActive;
+    });
+}
+
+// Form validation
+document.querySelector('.bulk-form').addEventListener('submit', function(e) {
+    const selectedProducts = document.querySelectorAll('.product-checkbox:checked');
+    const selectedAction = document.querySelector('input[name="action"]:checked');
+    
+    if (selectedProducts.length === 0) {
+        alert('{% trans "Please select at least one product." %}');
+        e.preventDefault();
+        return;
+    }
+    
+    if (!selectedAction) {
+        alert('{% trans "Please select an action." %}');
+        e.preventDefault();
+        return;
+    }
+    
+    if (selectedAction.value === 'bulk_restock') {
+        const restockQuantity = document.getElementById('restock_quantity').value;
+        if (!restockQuantity || restockQuantity < 0) {
+            alert('{% trans "Please enter a valid restock quantity." %}');
+            e.preventDefault();
+            return;
+        }
+    }
+    
+    if (!confirm(`{% trans "Are you sure you want to perform this action on" %} ${selectedProducts.length} {% trans "products?" %}`)) {
+        e.preventDefault();
+    }
+});
+</script>
+{% endblock %}

@@ -242,12 +242,28 @@ def apply_coupon(request):
         try:
             coupon = Coupon.objects.get(code=code, is_active=True)
             
-            # Get cart
+            # Get cart (handle multiple carts)
             if request.user.is_authenticated:
-                cart = Cart.objects.get(user=request.user, is_active=True)
+                active_carts = Cart.objects.filter(user=request.user, is_active=True)
+                if active_carts.count() > 1:
+                    # Keep the most recent cart and deactivate others
+                    cart = active_carts.order_by('-created_at').first()
+                    active_carts.exclude(id=cart.id).update(is_active=False)
+                else:
+                    cart = active_carts.first()
             else:
                 session_key = request.session.session_key
-                cart = Cart.objects.get(session_key=session_key, is_active=True)
+                active_carts = Cart.objects.filter(session_key=session_key, is_active=True)
+                if active_carts.count() > 1:
+                    # Keep the most recent cart and deactivate others
+                    cart = active_carts.order_by('-created_at').first()
+                    active_carts.exclude(id=cart.id).update(is_active=False)
+                else:
+                    cart = active_carts.first()
+            
+            if not cart:
+                messages.error(request, 'No active cart found.')
+                return redirect('store:cart')
             
             # Check if coupon is valid
             if coupon.is_valid(cart_total=cart.total_price):

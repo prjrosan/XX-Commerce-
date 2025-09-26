@@ -1,0 +1,351 @@
+{% extends 'admin/base_site.html' %}
+{% load static %}
+
+{% block title %}Sales Dashboard - XX Commerce Admin{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+.dashboard-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.dashboard-card h3 {
+    color: white;
+    margin-bottom: 1rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-left: 4px solid #667eea;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sales-table {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.sales-table th {
+    background: #667eea;
+    color: white;
+    padding: 1rem;
+    font-weight: 600;
+}
+
+.sales-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.sales-table tr:hover {
+    background: #f8f9fa;
+}
+
+.badge-status {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-processing { background: #ffc107; color: #000; }
+.status-shipped { background: #17a2b8; color: white; }
+.status-delivered { background: #28a745; color: white; }
+.status-cancelled { background: #dc3545; color: white; }
+.status-pending { background: #6c757d; color: white; }
+
+.alert-stock {
+    border-left: 4px solid #dc3545;
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.chart-container {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-card">
+    <h1><i class="fas fa-chart-line me-3"></i>Sales Dashboard</h1>
+    <p class="mb-0">Monitor your e-commerce performance and sales metrics</p>
+</div>
+
+<div class="row">
+    <!-- Key Metrics -->
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number">¥{{ total_revenue|floatformat:0 }}</div>
+            <div class="stat-label">Total Revenue</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_orders }}</div>
+            <div class="stat-label">Total Orders</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number">¥{{ recent_revenue|floatformat:0 }}</div>
+            <div class="stat-label">Recent Revenue (7 days)</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number">{{ low_stock_products.count }}</div>
+            <div class="stat-label">Low Stock Items</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Top Selling Products -->
+    <div class="col-md-6">
+        <div class="chart-container">
+            <h3><i class="fas fa-trophy me-2"></i>Top Selling Products</h3>
+            {% if top_products %}
+                <div class="sales-table">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Sold</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in top_products %}
+                            <tr>
+                                <td>
+                                    <strong>{{ product.name }}</strong><br>
+                                    <small class="text-muted">{{ product.sku }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ product.total_sold|default:0 }}</span>
+                                </td>
+                                <td>
+                                    ¥{{ product.price|floatformat:0 }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No sales data available yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sales by Category -->
+    <div class="col-md-6">
+        <div class="chart-container">
+            <h3><i class="fas fa-chart-pie me-2"></i>Sales by Category</h3>
+            {% if category_sales %}
+                <div class="sales-table">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Items Sold</th>
+                                <th>Products</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in category_sales %}
+                            <tr>
+                                <td><strong>{{ category.name }}</strong></td>
+                                <td>
+                                    <span class="badge bg-success">{{ category.total_sales|default:0 }}</span>
+                                </td>
+                                <td>{{ category.products.count }} products</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No category sales data available yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Order Status Distribution -->
+    <div class="col-md-6">
+        <div class="chart-container">
+            <h3><i class="fas fa-clipboard-list me-2"></i>Order Status Distribution</h3>
+            {% if order_status %}
+                <div class="sales-table">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for status in order_status %}
+                            <tr>
+                                <td>
+                                    <span class="badge-status status-{{ status.status }}">
+                                        {{ status.status|title }}
+                                    </span>
+                                </td>
+                                <td><strong>{{ status.count }}</strong></td>
+                                <td>
+                                    {% widthratio status.count total_orders 100 %}%
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No order status data available.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Low Stock Alert -->
+    <div class="col-md-6">
+        <div class="chart-container">
+            <h3><i class="fas fa-exclamation-triangle me-2"></i>Low Stock Alert</h3>
+            {% if low_stock_products %}
+                <div class="alert alert-stock">
+                    <strong>Warning:</strong> {{ low_stock_products.count }} products are running low on stock!
+                </div>
+                <div class="sales-table">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Current Stock</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in low_stock_products %}
+                            <tr>
+                                <td>
+                                    <strong>{{ product.name }}</strong><br>
+                                    <small class="text-muted">{{ product.sku }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-danger">{{ product.stock_quantity }}</span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'admin:store_product_change' product.id %}" 
+                                       class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i> Restock
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    All products have sufficient stock!
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders -->
+<div class="row">
+    <div class="col-12">
+        <div class="chart-container">
+            <h3><i class="fas fa-shopping-cart me-2"></i>Recent Orders</h3>
+            {% if recent_orders %}
+                <div class="sales-table">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td><strong>{{ order.order_number }}</strong></td>
+                                <td>{{ order.user.username }}</td>
+                                <td>
+                                    <span class="badge-status status-{{ order.status }}">
+                                        {{ order.status|title }}
+                                    </span>
+                                </td>
+                                <td>¥{{ order.total_amount|floatformat:0 }}</td>
+                                <td>{{ order.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'admin:store_order_change' order.id %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No recent orders found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a href="{% url 'admin:store_product_changelist' %}" class="btn btn-primary me-3">
+            <i class="fas fa-box me-2"></i>Manage Products
+        </a>
+        <a href="{% url 'admin:store_order_changelist' %}" class="btn btn-success me-3">
+            <i class="fas fa-shopping-cart me-2"></i>Manage Orders
+        </a>
+        <a href="{% url 'admin:store_product_add' %}" class="btn btn-warning">
+            <i class="fas fa-plus me-2"></i>Add New Product
+        </a>
+    </div>
+</div>
+{% endblock %}

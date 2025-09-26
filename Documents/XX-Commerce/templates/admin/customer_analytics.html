@@ -1,0 +1,224 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Customer Analytics" %}{% endblock %}
+
+{% block content %}
+<div class="customer-analytics">
+    <h1><i class="fas fa-users me-3"></i>{% trans "Customer Analytics" %}</h1>
+    
+    <!-- Customer Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{% trans "Total Customers" %}</h3>
+                <p class="stat-number">{{ total_customers|floatformat:0 }}</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{% trans "New This Month" %}</h3>
+                <p class="stat-number">{{ new_customers_this_month|floatformat:0 }}</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{% trans "Active Customers" %}</h3>
+                <p class="stat-number">{{ active_customers|floatformat:0 }}</p>
+                <small>{% trans "Last 30 days" %}</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Customers -->
+    <div class="analytics-section">
+        <h2><i class="fas fa-trophy me-2"></i>{% trans "Top Customers" %}</h2>
+        <div class="table-container">
+            <table class="results">
+                <thead>
+                    <tr>
+                        <th>{% trans "Customer" %}</th>
+                        <th>{% trans "Orders" %}</th>
+                        <th>{% trans "Total Spent" %}</th>
+                        <th>{% trans "Last Order" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in top_customers %}
+                    <tr>
+                        <td>
+                            <strong>{{ customer.username }}</strong><br>
+                            <small class="text-muted">{{ customer.email }}</small>
+                        </td>
+                        <td>{{ customer.order_count }}</td>
+                        <td>¥{{ customer.total_spent|floatformat:0 }}</td>
+                        <td>
+                            {% if customer.orders.first %}
+                                {{ customer.orders.first.created_at|date:"M d, Y" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="no-data">{% trans "No customer data available" %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Registration Trends -->
+    <div class="analytics-section">
+        <h2><i class="fas fa-chart-line me-2"></i>{% trans "Registration Trends" %}</h2>
+        <div class="chart-container">
+            <canvas id="registrationChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+</div>
+
+<style>
+.customer-analytics {
+    padding: 20px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    background: #f8f9fa;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #007bff;
+}
+
+.stat-content h3 {
+    margin: 0 0 5px 0;
+    color: #6c757d;
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.analytics-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 25px;
+    margin-bottom: 20px;
+}
+
+.analytics-section h2 {
+    margin-top: 0;
+    color: #2c3e50;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+.results {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.results th,
+.results td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.results th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+}
+
+.results tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.no-data {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    padding: 30px;
+}
+
+.chart-container {
+    padding: 20px;
+    text-align: center;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Registration trends chart
+const ctx = document.getElementById('registrationChart').getContext('2d');
+const registrationData = {{ daily_registrations|safe }};
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: registrationData.map(item => item.date),
+        datasets: [{
+            label: '{% trans "New Registrations" %}',
+            data: registrationData.map(item => item.count),
+            borderColor: '#007bff',
+            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

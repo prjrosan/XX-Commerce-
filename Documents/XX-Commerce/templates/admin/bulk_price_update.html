@@ -1,0 +1,43 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Bulk Price Update" %}{% endblock %}
+
+{% block content %}
+<h1>{% trans "Bulk Price Update" %}</h1>
+
+<p>{% trans "You have selected" %} {{ queryset.count }} {% trans "products for bulk price update." %}</p>
+
+<form method="post">
+    {% csrf_token %}
+    <fieldset class="module aligned">
+        <h2>{% trans "Price Update Options" %}</h2>
+        
+        <div class="form-row">
+            <div>
+                <label for="price_increase">{% trans "Price Increase (add to current price):" %}</label>
+                <input type="number" name="price_increase" id="price_increase" step="0.01" min="0" value="0">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div>
+                <label for="price_multiplier">{% trans "Price Multiplier (multiply current price):" %}</label>
+                <input type="number" name="price_multiplier" id="price_multiplier" step="0.01" min="0.01" value="1.0">
+            </div>
+        </div>
+    </fieldset>
+    
+    <div class="submit-row">
+        <input type="submit" value="{% trans "Update Prices" %}" class="default" name="post">
+        <a href="{% url 'admin:store_product_changelist' %}" class="button cancel-link">{% trans "Cancel" %}</a>
+    </div>
+</form>
+
+<h2>{% trans "Selected Products" %}</h2>
+<ul>
+    {% for product in queryset %}
+    <li>{{ product.name }} - Current Price: ¥{{ product.price|floatformat:2 }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

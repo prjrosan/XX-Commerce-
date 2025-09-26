@@ -1,0 +1,41 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Bulk Status Update" %}{% endblock %}
+
+{% block content %}
+<h1>{% trans "Bulk Status Update" %}</h1>
+
+<p>{% trans "You have selected" %} {{ queryset.count }} {% trans "orders for bulk status update." %}</p>
+
+<form method="post">
+    {% csrf_token %}
+    <fieldset class="module aligned">
+        <h2>{% trans "Status Update Options" %}</h2>
+        
+        <div class="form-row">
+            <div>
+                <label for="new_status">{% trans "New Status:" %}</label>
+                <select name="new_status" id="new_status" required>
+                    <option value="">{% trans "Select Status" %}</option>
+                    {% for value, label in status_choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </fieldset>
+    
+    <div class="submit-row">
+        <input type="submit" value="{% trans "Update Status" %}" class="default" name="post">
+        <a href="{% url 'admin:store_order_changelist' %}" class="button cancel-link">{% trans "Cancel" %}</a>
+    </div>
+</form>
+
+<h2>{% trans "Selected Orders" %}</h2>
+<ul>
+    {% for order in queryset %}
+    <li>{{ order.order_number }} - Current Status: {{ order.get_status_display }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

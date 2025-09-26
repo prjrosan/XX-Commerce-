@@ -140,8 +140,12 @@
                             <small class="text-muted">{{ product.category.name }}</small>
                         </div>
                         <div class="d-grid gap-2">
-                            <a href="{% url 'store:product_detail' product.slug %}" 
-                               class="btn btn-outline-primary btn-sm">View Details</a>
+                            {% if product.slug %}
+                                <a href="{% url 'store:product_detail' product.slug %}" 
+                                   class="btn btn-outline-primary btn-sm">View Details</a>
+                            {% else %}
+                                <span class="btn btn-outline-secondary btn-sm disabled">No Details</span>
+                            {% endif %}
                             {% if product.is_in_stock %}
                                 <form method="post" action="{% url 'store:add_to_cart' product.id %}" class="add-to-cart-form">
                                     {% csrf_token %}

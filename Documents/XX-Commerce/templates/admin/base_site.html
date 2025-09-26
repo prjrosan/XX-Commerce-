@@ -1,0 +1,156 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        <i class="fas fa-store me-2"></i>{{ site_header|default:_('Django administration') }}
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    {% if title %} &rsaquo; {{ title }}{% endif %}
+</div>
+{% endblock %}
+
+{% block nav-sidebar %}
+<div class="admin-navigation">
+    <div class="nav-section">
+        <h3><i class="fas fa-tachometer-alt me-2"></i>{% trans 'Dashboard' %}</h3>
+        <ul>
+            <li><a href="{% url 'admin:index' %}"><i class="fas fa-home me-2"></i>{% trans 'Overview' %}</a></li>
+            <li><a href="{% url 'admin_sales_dashboard' %}"><i class="fas fa-chart-line me-2"></i>{% trans 'Sales Dashboard' %}</a></li>
+        </ul>
+    </div>
+    
+    <div class="nav-section">
+        <h3><i class="fas fa-box me-2"></i>{% trans 'Products' %}</h3>
+        <ul>
+            <li><a href="{% url 'admin:store_product_changelist' %}"><i class="fas fa-list me-2"></i>{% trans 'All Products' %}</a></li>
+            <li><a href="{% url 'admin:store_product_add' %}"><i class="fas fa-plus me-2"></i>{% trans 'Add Product' %}</a></li>
+            <li><a href="{% url 'admin:store_category_changelist' %}"><i class="fas fa-folder me-2"></i>{% trans 'Categories' %}</a></li>
+            <li><a href="{% url 'admin_product_analytics' %}"><i class="fas fa-chart-bar me-2"></i>{% trans 'Product Analytics' %}</a></li>
+        </ul>
+    </div>
+    
+    <div class="nav-section">
+        <h3><i class="fas fa-shopping-cart me-2"></i>{% trans 'Orders' %}</h3>
+        <ul>
+            <li><a href="{% url 'admin:store_order_changelist' %}"><i class="fas fa-list me-2"></i>{% trans 'All Orders' %}</a></li>
+            <li><a href="{% url 'admin:store_order_changelist' %}?status__exact=pending"><i class="fas fa-clock me-2"></i>{% trans 'Pending Orders' %}</a></li>
+            <li><a href="{% url 'admin:store_order_changelist' %}?status__exact=processing"><i class="fas fa-cog me-2"></i>{% trans 'Processing' %}</a></li>
+            <li><a href="{% url 'admin:store_order_changelist' %}?status__exact=shipped"><i class="fas fa-truck me-2"></i>{% trans 'Shipped' %}</a></li>
+            <li><a href="{% url 'admin_order_analytics' %}"><i class="fas fa-chart-pie me-2"></i>{% trans 'Order Analytics' %}</a></li>
+        </ul>
+    </div>
+    
+    <div class="nav-section">
+        <h3><i class="fas fa-users me-2"></i>{% trans 'Customers' %}</h3>
+        <ul>
+            <li><a href="{% url 'admin:auth_user_changelist' %}"><i class="fas fa-users me-2"></i>{% trans 'All Users' %}</a></li>
+            <li><a href="{% url 'admin_customer_analytics' %}"><i class="fas fa-chart-line me-2"></i>{% trans 'Customer Analytics' %}</a></li>
+            <li><a href="{% url 'admin:store_address_changelist' %}"><i class="fas fa-map-marker-alt me-2"></i>{% trans 'Addresses' %}</a></li>
+        </ul>
+    </div>
+    
+    <div class="nav-section">
+        <h3><i class="fas fa-warehouse me-2"></i>{% trans 'Inventory' %}</h3>
+        <ul>
+            <li><a href="{% url 'admin_inventory' %}"><i class="fas fa-boxes me-2"></i>{% trans 'Inventory Management' %}</a></li>
+            <li><a href="{% url 'admin:store_product_changelist' %}?stock_quantity__lt=10"><i class="fas fa-exclamation-triangle me-2"></i>{% trans 'Low Stock' %}</a></li>
+            <li><a href="{% url 'admin:store_product_changelist' %}?stock_quantity=0"><i class="fas fa-times-circle me-2"></i>{% trans 'Out of Stock' %}</a></li>
+        </ul>
+    </div>
+    
+    <div class="nav-section">
+        <h3><i class="fas fa-tools me-2"></i>{% trans 'Tools' %}</h3>
+        <ul>
+            <li><a href="{% url 'admin_bulk_operations' %}"><i class="fas fa-tasks me-2"></i>{% trans 'Bulk Operations' %}</a></li>
+            <li><a href="{% url 'admin_export_data' %}?type=products"><i class="fas fa-download me-2"></i>{% trans 'Export Products' %}</a></li>
+            <li><a href="{% url 'admin_export_data' %}?type=orders"><i class="fas fa-download me-2"></i>{% trans 'Export Orders' %}</a></li>
+            <li><a href="{% url 'admin_export_data' %}?type=customers"><i class="fas fa-download me-2"></i>{% trans 'Export Customers' %}</a></li>
+        </ul>
+    </div>
+    
+    <div class="nav-section">
+        <h3><i class="fas fa-tags me-2"></i>{% trans 'Marketing' %}</h3>
+        <ul>
+            <li><a href="{% url 'admin:store_coupon_changelist' %}"><i class="fas fa-ticket-alt me-2"></i>{% trans 'Coupons' %}</a></li>
+            <li><a href="{% url 'admin:store_wishlist_changelist' %}"><i class="fas fa-heart me-2"></i>{% trans 'Wishlists' %}</a></li>
+        </ul>
+    </div>
+</div>
+
+<style>
+.admin-navigation {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.nav-section {
+    margin-bottom: 25px;
+}
+
+.nav-section h3 {
+    color: #495057;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.nav-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-section li {
+    margin-bottom: 5px;
+}
+
+.nav-section a {
+    display: block;
+    padding: 8px 12px;
+    color: #495057;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.nav-section a:hover {
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+}
+
+.nav-section a i {
+    width: 16px;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .admin-navigation {
+        padding: 15px;
+    }
+    
+    .nav-section {
+        margin-bottom: 20px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}

@@ -1,7 +1,18 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from django.urls import reverse
+from django.urls import reverse, path
 from django.utils.safestring import mark_safe
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.http import require_POST
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Sum, Count, Avg, Q
+from django.utils import timezone
+from datetime import timedelta
+import json
+import csv
 from .models import (
     Category, Product, ProductImage, Address, Cart, CartItem, 
     Order, OrderItem, Coupon, Wishlist
@@ -16,6 +27,15 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_editable = ['is_active']
     ordering = ['name']
+    
+    def has_add_permission(self, request):
+        return request.user.is_staff
+    
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_staff
+    
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
 
 
 class ProductImageInline(admin.TabularInline):
@@ -28,7 +48,7 @@ class ProductImageInline(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     list_display = [
         'name', 'sku', 'category', 'price', 'compare_price', 'price_yen', 'compare_price_yen', 
-        'stock_quantity', 'is_active', 'is_featured', 'created_at'
+        'stock_quantity', 'get_sales_count', 'is_active', 'is_featured', 'created_at'
     ]
     list_filter = [
         'is_active', 'is_featured', 'category', 'track_inventory', 
@@ -39,7 +59,10 @@ class ProductAdmin(admin.ModelAdmin):
     list_editable = ['price', 'compare_price', 'stock_quantity', 'is_active', 'is_featured']
     inlines = [ProductImageInline]
     ordering = ['-created_at']
-    actions = ['make_active', 'make_inactive', 'make_featured', 'make_unfeatured']
+    actions = [
+        'make_active', 'make_inactive', 'make_featured', 'make_unfeatured', 
+        'restock_products', 'bulk_price_update', 'export_products', 'duplicate_products'
+    ]
     
     def price_yen(self, obj):
         return f"¥{obj.price:,.0f}"
@@ -72,6 +95,106 @@ class ProductAdmin(admin.ModelAdmin):
         updated = queryset.update(is_featured=False)
         self.message_user(request, f'{updated} products were successfully marked as unfeatured.')
     make_unfeatured.short_description = "Mark selected products as unfeatured"
+    
+    def get_sales_count(self, obj):
+        """Display total sales count for this product."""
+        from django.db.models import Sum
+        total_sold = OrderItem.objects.filter(product=obj).aggregate(
+            total=Sum('quantity')
+        )['total'] or 0
+        return f"{total_sold:,}"
+    get_sales_count.short_description = 'Total Sold'
+    get_sales_count.admin_order_field = 'orderitem__quantity'
+    
+    def restock_products(self, request, queryset):
+        """Restock selected products to a default quantity."""
+        restock_quantity = 100  # Default restock quantity
+        updated = queryset.update(stock_quantity=restock_quantity)
+        self.message_user(request, f'{updated} products were restocked to {restock_quantity} units.')
+    restock_products.short_description = "Restock selected products to 100 units"
+    
+    def bulk_price_update(self, request, queryset):
+        """Bulk update prices for selected products."""
+        if request.POST.get('post'):
+            price_increase = float(request.POST.get('price_increase', 0))
+            price_multiplier = float(request.POST.get('price_multiplier', 1.0))
+            
+            updated = 0
+            for product in queryset:
+                if price_increase > 0:
+                    product.price += price_increase
+                if price_multiplier != 1.0:
+                    product.price *= price_multiplier
+                product.save()
+                updated += 1
+            
+            self.message_user(request, f'{updated} products were updated.')
+            return
+        
+        context = {
+            'queryset': queryset,
+            'action_name': 'bulk_price_update',
+        }
+        return render(request, 'admin/bulk_price_update.html', context)
+    bulk_price_update.short_description = "Bulk update prices"
+    
+    def export_products(self, request, queryset):
+        """Export selected products to CSV."""
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="products_export.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow([
+            'Name', 'SKU', 'Category', 'Price', 'Compare Price', 'Stock', 
+            'Active', 'Featured', 'Created At'
+        ])
+        
+        for product in queryset:
+            writer.writerow([
+                product.name,
+                product.sku,
+                product.category.name,
+                product.price,
+                product.compare_price or '',
+                product.stock_quantity,
+                product.is_active,
+                product.is_featured,
+                product.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            ])
+        
+        return response
+    export_products.short_description = "Export selected products to CSV"
+    
+    def duplicate_products(self, request, queryset):
+        """Duplicate selected products."""
+        duplicated = 0
+        for product in queryset:
+            # Create a copy
+            product.pk = None
+            product.name = f"{product.name} (Copy)"
+            product.sku = f"{product.sku}_COPY_{timezone.now().strftime('%Y%m%d%H%M%S')}"
+            product.slug = f"{product.slug}-copy-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+            product.save()
+            
+            # Copy images
+            for image in product.images.all():
+                image.pk = None
+                image.product = product
+                image.save()
+            
+            duplicated += 1
+        
+        self.message_user(request, f'{duplicated} products were duplicated.')
+    duplicate_products.short_description = "Duplicate selected products"
+    
+    def has_add_permission(self, request):
+        return request.user.is_staff
+    
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_staff
+    
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
     
     fieldsets = (
         ('Basic Information', {
@@ -168,18 +291,103 @@ class OrderItemInline(admin.TabularInline):
 class OrderAdmin(admin.ModelAdmin):
     list_display = [
         'order_number', 'user', 'status', 'payment_status', 
-        'total_amount_yen', 'total_items', 'created_at'
+        'total_amount_yen', 'total_items', 'get_items_sold', 'created_at'
     ]
     list_filter = ['status', 'payment_status', 'created_at']
     search_fields = ['order_number', 'user__username', 'tracking_number']
     readonly_fields = ['order_number', 'total_items', 'created_at', 'updated_at']
     inlines = [OrderItemInline]
     ordering = ['-created_at']
+    actions = [
+        'mark_as_processing', 'mark_as_shipped', 'mark_as_delivered', 'mark_as_cancelled',
+        'export_orders', 'send_tracking_emails', 'bulk_status_update'
+    ]
     
     def total_amount_yen(self, obj):
         return f"¥{obj.total_amount:,.0f}"
     total_amount_yen.short_description = 'Total (JPY)'
     total_amount_yen.admin_order_field = 'total_amount'
+    
+    def get_items_sold(self, obj):
+        """Display total items sold in this order."""
+        from django.db.models import Sum
+        total_items = obj.items.aggregate(total=Sum('quantity'))['total'] or 0
+        return f"{total_items:,}"
+    get_items_sold.short_description = 'Items Sold'
+    get_items_sold.admin_order_field = 'items__quantity'
+    
+    def mark_as_processing(self, request, queryset):
+        updated = queryset.update(status='processing')
+        self.message_user(request, f'{updated} orders were marked as processing.')
+    mark_as_processing.short_description = "Mark selected orders as processing"
+    
+    def mark_as_shipped(self, request, queryset):
+        updated = queryset.update(status='shipped')
+        self.message_user(request, f'{updated} orders were marked as shipped.')
+    mark_as_shipped.short_description = "Mark selected orders as shipped"
+    
+    def mark_as_delivered(self, request, queryset):
+        updated = queryset.update(status='delivered')
+        self.message_user(request, f'{updated} orders were marked as delivered.')
+    mark_as_delivered.short_description = "Mark selected orders as delivered"
+    
+    def mark_as_cancelled(self, request, queryset):
+        updated = queryset.update(status='cancelled')
+        self.message_user(request, f'{updated} orders were marked as cancelled.')
+    mark_as_cancelled.short_description = "Mark selected orders as cancelled"
+    
+    def export_orders(self, request, queryset):
+        """Export selected orders to CSV."""
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="orders_export.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow([
+            'Order Number', 'Customer', 'Status', 'Payment Status', 'Total Amount',
+            'Items Count', 'Created At', 'Tracking Number'
+        ])
+        
+        for order in queryset:
+            writer.writerow([
+                order.order_number,
+                order.user.username if order.user else 'Guest',
+                order.status,
+                order.payment_status,
+                order.total_amount,
+                order.total_items,
+                order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                order.tracking_number or ''
+            ])
+        
+        return response
+    export_orders.short_description = "Export selected orders to CSV"
+    
+    def send_tracking_emails(self, request, queryset):
+        """Send tracking emails for shipped orders."""
+        sent = 0
+        for order in queryset.filter(status='shipped', tracking_number__isnull=False):
+            # Here you would implement email sending logic
+            # For now, just count the orders that would receive emails
+            sent += 1
+        
+        self.message_user(request, f'Tracking emails would be sent for {sent} orders.')
+    send_tracking_emails.short_description = "Send tracking emails for shipped orders"
+    
+    def bulk_status_update(self, request, queryset):
+        """Bulk update order status."""
+        if request.POST.get('post'):
+            new_status = request.POST.get('new_status')
+            updated = queryset.update(status=new_status)
+            self.message_user(request, f'{updated} orders were updated to {new_status}.')
+            return
+        
+        context = {
+            'queryset': queryset,
+            'action_name': 'bulk_status_update',
+            'status_choices': Order.ORDER_STATUS,
+        }
+        return render(request, 'admin/bulk_status_update.html', context)
+    bulk_status_update.short_description = "Bulk update order status"
     
     fieldsets = (
         ('Order Information', {
@@ -260,12 +468,6 @@ admin.site.site_header = "XX Commerce Administration"
 admin.site.site_title = "XX Commerce Admin"
 admin.site.index_title = "Welcome to XX Commerce Administration"
 
-# Add custom admin views for better product management
-from django.urls import path
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-import json
+# Custom admin URLs are handled in the main urls.py file
+
+# Custom admin views are handled in admin_views.py and main urls.py
